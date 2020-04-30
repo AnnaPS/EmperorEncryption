@@ -6,35 +6,33 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
-    var alphabet26Letters = mutableListOf("A", "B", "C", "D", "E", "F", "G", "H",
+    private var alphabet26Letters = mutableListOf("A", "B", "C", "D", "E", "F", "G", "H",
             "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
-    var alphabet27Letters = mutableListOf("A", "B", "C", "D", "E", "F", "G", "H",
+    private var alphabet27Letters = mutableListOf("A", "B", "C", "D", "E", "F", "G", "H",
             "I", "J", "K", "L", "M", "N", "Ñ", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z")
 
+    private var displacement = 3
+    private var displacementAlphabet = mutableListOf<String>()
+    private var displacementAlphabetRest = mutableListOf<String>()
+    private var messageToDecrypt = "HOLA QUE TAL ESTÁS".toUpperCase().stripAccents()
+    private var encryptMessage = ""
+    private var decryptMessage = ""
 
-    var displacement = 3
-    var displacementAlphabet = mutableListOf<String>()
-    var displacementAlphabetRest = mutableListOf<String>()
 
-    // TODO:  MIRAR LOS ESPACIOS QUE NO LOS COGE
-    var messageToDecrypt = "HOLA QUE TAL"
-
-    var encryptMessage = ""
-    var decryptMessage = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        var selectedList = alphabet27Letters
-        prepareList()
+        var selectedList = alphabet26Letters
+        prepareList(selectedList)
 
-        encrypt(selectedList)
-        decrypt(selectedList)
+        encrypt(selectedList, messageToDecrypt)
+        decrypt(selectedList, messageToDecrypt, encryptMessage)
 
     }
 
-    private fun prepareList() {
-        alphabet27Letters.forEachIndexed { index, letter ->
+    private fun prepareList(selectedList: MutableList<String>) {
+        selectedList.forEachIndexed { index, letter ->
             // get letter rest
             if (index < displacement) {
                 displacementAlphabetRest.add(letter)
@@ -49,22 +47,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun decrypt(selectedList: MutableList<String>) {
+    private fun decrypt(selectedList: MutableList<String>, message: String, encryptedMessage:String) {
         val sb = StringBuilder()
 
-        var messageLengthIndx = messageToDecrypt.length
-        var messageLength = messageToDecrypt.length
+        var messageLengthIndx = message.length
+        var messageLength = message.length
         var zipList = selectedList.zip(displacementAlphabet)
         var ind = 0
+        var decryptChars = encryptedMessage.toList()
+
 
         while (messageLengthIndx != 0) {
             zipList.forEachIndexed { _, it ->
                 if (ind != messageLength) {
-                    if (it.second == encryptMessage[ind].toString()) {
-                        decryptMessage = sb.append(it.first).toString()
+                    if (decryptChars[ind].isWhitespace()) {
+                        decryptMessage = sb.append(" ").toString()
                         messageLengthIndx--
                         ind++
+                    }else{
+                        if (it.second == encryptedMessage[ind].toString()) {
+                            decryptMessage = sb.append(it.first).toString()
+                            messageLengthIndx--
+                            ind++
+                        }
                     }
+
+
                 }
 
             }
@@ -73,8 +81,9 @@ class MainActivity : AppCompatActivity() {
         textview.text = decryptMessage
     }
 
-    private fun encrypt(selectedList: MutableList<String>) {
+    private fun encrypt(selectedList: MutableList<String>, message: String) {
         val sb = StringBuilder()
+        var chars = messageToDecrypt.toList()
 
         var messageLengthIndx = messageToDecrypt.length
         var messageLength = messageToDecrypt.length
@@ -84,10 +93,16 @@ class MainActivity : AppCompatActivity() {
         while (messageLengthIndx != 0) {
             zipList.forEachIndexed { i, it ->
                 if (ind != messageLength) {
-                    if (it.first == messageToDecrypt[ind].toString()) {
-                        encryptMessage = sb.append(it.second).toString()
+                    if (chars[ind].isWhitespace()) {
+                        encryptMessage = sb.append(" ").toString()
                         messageLengthIndx--
                         ind++
+                    }else{
+                        if (it.first == messageToDecrypt[ind].toString()) {
+                            encryptMessage = sb.append(it.second).toString()
+                            messageLengthIndx--
+                            ind++
+                        }
                     }
                 }
             }
@@ -95,4 +110,5 @@ class MainActivity : AppCompatActivity() {
 
         textview2.text = encryptMessage
     }
+
 }
